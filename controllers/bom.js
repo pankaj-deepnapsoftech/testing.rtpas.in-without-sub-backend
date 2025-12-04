@@ -1370,7 +1370,7 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
 
   const limit = parseInt(req.query.limit) || 100;
-
+ 
   const skip = (page - 1) * limit;
 
   const shortages = await InventoryShortage.find()
@@ -1384,7 +1384,7 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
     .populate({
       path: "bom",
 
-      select: "bom_name",
+      select: "bom_name approved", 
     })
 
     .sort({ updatedAt: -1 })
@@ -1394,7 +1394,9 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
     .limit(limit);
 
   const formattedShortages = shortages.map((shortage) => ({
+   
     bom_name: shortage.bom?.bom_name || "Unknown BOM",
+    approved: shortage.bom?.approved ,
     item_name: shortage.item?.name || "Unknown Item",
     item: shortage.item?._id || null,
     shortage_quantity: shortage.shortage_quantity,
