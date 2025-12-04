@@ -1255,9 +1255,6 @@ exports.removeFromInventoryShortages = TryCatch(async (req, res) => {
   });
 });
 
-// Function to update individual shortage entry by shortage ID
-exports.updateIndividualShortage = TryCatch(async (req, res) => {
-  const { shortageId, newShortageQuantity, stockToAdd } = req.body;
 
   console.log("updateIndividualShortage called with:", { shortageId, newShortageQuantity, stockToAdd });
 
@@ -1368,7 +1365,7 @@ exports.updateIndividualShortage = TryCatch(async (req, res) => {
     shortage: updatedShortage,
     product: updatedProduct,
   });
-});
+
 
 // TODO: Function to update shortage quantity for partially resolved items
 exports.updateShortageQuantity = TryCatch(async (req, res) => {

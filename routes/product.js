@@ -22,7 +22,7 @@ const {
   clearUpdatedStock,
   removeFromInventoryShortages,
   updateShortageQuantity,
-  updateIndividualShortage,
+  
   updateStockAndShortages,
   availabilQty,
 } = require("../controllers/product");
@@ -31,7 +31,7 @@ const { isSuper } = require("../middlewares/isSuper");
 const { upload } = require("../utils/upload");
 const { roundAllPrices } = require("../utils/roundPrices");
 const router = express.Router();
-
+    
 // CRUD operations
 router
   .route("/")
@@ -89,11 +89,7 @@ router.put(
   isAuthenticated,
   updateShortageQuantity
 );
-router.put(
-  "/update-individual-shortage",
-  isAuthenticated,
-  updateIndividualShortage
-);
+
 
 // Utility route to round all existing prices to whole numbers
 router.post("/round-prices", isAuthenticated, isSuper, async (req, res) => {
