@@ -1395,6 +1395,7 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
     .limit(limit);
 
   const formattedShortages = shortages.map((shortage) => ({
+    _id: shortage._id || null,
     bom_name: shortage.bom?.bom_name || "Unknown BOM",
     item_name: shortage.item?.name || "Unknown Item",
     item: shortage.item?._id || null,

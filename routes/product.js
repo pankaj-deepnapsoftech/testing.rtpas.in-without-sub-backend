@@ -22,6 +22,7 @@ const {
   clearUpdatedStock,
   removeFromInventoryShortages,
   updateShortageQuantity,
+  updateIndividualShortage,
   updateStockAndShortages,
   availabilQty,
 } = require("../controllers/product");
@@ -87,6 +88,11 @@ router.put(
   "/update-shortage-quantity",
   isAuthenticated,
   updateShortageQuantity
+);
+router.put(
+  "/update-individual-shortage",
+  isAuthenticated,
+  updateIndividualShortage
 );
 
 // Utility route to round all existing prices to whole numbers

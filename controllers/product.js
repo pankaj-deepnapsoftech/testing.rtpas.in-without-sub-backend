@@ -1255,6 +1255,121 @@ exports.removeFromInventoryShortages = TryCatch(async (req, res) => {
   });
 });
 
+// Function to update individual shortage entry by shortage ID
+exports.updateIndividualShortage = TryCatch(async (req, res) => {
+  const { shortageId, newShortageQuantity, stockToAdd } = req.body;
+
+  console.log("updateIndividualShortage called with:", { shortageId, newShortageQuantity, stockToAdd });
+
+  if (!shortageId) {
+    throw new ErrorHandler("Please provide shortageId", 400);
+  }
+
+  // Import InventoryShortage model
+  const InventoryShortage = require("../models/inventoryShortage");
+
+  // Find the specific shortage entry
+  const shortage = await InventoryShortage.findById(shortageId);
+  if (!shortage) {
+    throw new ErrorHandler("Shortage entry not found", 404);
+  }
+
+  // Find the product
+  const product = await Product.findById(shortage.item);
+  if (!product) {
+    throw new ErrorHandler("Product doesn't exist", 400);
+  }
+
+  let updatedProduct = product;
+  let updatedShortage = shortage;
+
+  // If stockToAdd is provided, update product stock and calculate new shortage quantity
+  if (stockToAdd !== undefined && stockToAdd !== null && stockToAdd > 0) {
+    const currentStock = product.current_stock || 0;
+    const currentShortageQuantity = shortage.shortage_quantity || 0;
+    
+    // Calculate new shortage quantity after adding stock
+    const newShortageQty = Math.max(0, currentShortageQuantity - stockToAdd);
+    
+    // Update product stock
+    updatedProduct = await Product.findByIdAndUpdate(
+      product._id,
+      {
+        current_stock: currentStock + stockToAdd,
+        updated_stock: (product.updated_stock || 0) + stockToAdd,
+      },
+      { new: true }
+    );
+
+    // Update the specific shortage entry
+    if (newShortageQty === 0) {
+      updatedShortage = await InventoryShortage.findByIdAndUpdate(
+        shortageId,
+        {
+          shortage_quantity: 0,
+          is_resolved: true,
+          resolved_at: new Date(),
+          resolved_by: req.user._id,
+        },
+        { new: true }
+      );
+    } else {
+      updatedShortage = await InventoryShortage.findByIdAndUpdate(
+        shortageId,
+        {
+          shortage_quantity: newShortageQty,
+          is_resolved: false,
+        },
+        { new: true }
+      );
+    }
+  } 
+  // If newShortageQuantity is provided directly, just update the shortage quantity
+  else if (newShortageQuantity !== undefined && newShortageQuantity !== null) {
+    if (newShortageQuantity < 0) {
+      throw new ErrorHandler("Shortage quantity cannot be negative", 400);
+    }
+
+    if (newShortageQuantity === 0) {
+      updatedShortage = await InventoryShortage.findByIdAndUpdate(
+        shortageId,
+        {
+          shortage_quantity: 0,
+          is_resolved: true,
+          resolved_at: new Date(),
+          resolved_by: req.user._id,
+        },
+        { new: true }
+      );
+    } else {
+      updatedShortage = await InventoryShortage.findByIdAndUpdate(
+        shortageId,
+        {
+          shortage_quantity: newShortageQuantity,
+          is_resolved: false,
+        },
+        { new: true }
+      );
+    }
+  } else {
+    throw new ErrorHandler("Please provide either stockToAdd or newShortageQuantity", 400);
+  }
+
+  console.log("Individual shortage updated successfully:", {
+    shortageId: updatedShortage._id,
+    newShortageQuantity: updatedShortage.shortage_quantity,
+    isResolved: updatedShortage.is_resolved,
+  });
+
+  res.status(200).json({
+    status: 200,
+    success: true,
+    message: "Individual shortage updated successfully",
+    shortage: updatedShortage,
+    product: updatedProduct,
+  });
+});
+
 // TODO: Function to update shortage quantity for partially resolved items
 exports.updateShortageQuantity = TryCatch(async (req, res) => {
   const { productId, newShortageQuantity } = req.body;
