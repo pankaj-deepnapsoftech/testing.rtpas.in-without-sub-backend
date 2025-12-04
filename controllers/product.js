@@ -229,7 +229,7 @@ exports.bulkUploadHandler = async (req, res) => {
       }
 
       // Debug: Log HSN code for each product
-      
+
 
       // --- UPDATED CODE: product_id = last 3 chars of _id ---
       const tempId = new Product()._id.toString();
@@ -544,14 +544,14 @@ exports.workInProgressProducts = TryCatch(async (req, res) => {
   const products = [];
   const processes = await ProductionProcess.find({
     status: { $in: ["production started", "production in progress"] }
-  }) .populate({
-      path: "raw_materials",
-      populate: [
-        {
-          path: "item",
-        },
-      ],
-    })
+  }).populate({
+    path: "raw_materials",
+    populate: [
+      {
+        path: "item",
+      },
+    ],
+  })
     .populate({
       path: "bom",
       populate: [
@@ -801,7 +801,7 @@ exports.exportToExcelIndirect = TryCatch(async (req, res) => {
       .populate("store", "name");
   }
 
-  const excelData = products.map((product) => ({    
+  const excelData = products.map((product) => ({
     "Inventory Category": product.inventory_category || "N/A",
     "Product Name": product.name || "N/A",
     "Product Color": product.color_name || "N/A",
@@ -809,7 +809,7 @@ exports.exportToExcelIndirect = TryCatch(async (req, res) => {
     Store: product.store?.name || product.store || "N/A",
     UOM: product.uom || "N/A",
     Category: product.category || "N/A",
-    "Current Stock": product.current_stock || 0, 
+    "Current Stock": product.current_stock || 0,
     "Min Stock": product.min_stock || "N/A",
     "Max Stock": product.max_stock || "N/A",
     Price: product.price || 0,
@@ -1287,10 +1287,10 @@ exports.updateIndividualShortage = TryCatch(async (req, res) => {
   if (stockToAdd !== undefined && stockToAdd !== null && stockToAdd > 0) {
     const currentStock = product.current_stock || 0;
     const currentShortageQuantity = shortage.shortage_quantity || 0;
-    
+
     // Calculate new shortage quantity after adding stock
     const newShortageQty = Math.max(0, currentShortageQuantity - stockToAdd);
-    
+
     // Update product stock
     updatedProduct = await Product.findByIdAndUpdate(
       product._id,
@@ -1323,7 +1323,7 @@ exports.updateIndividualShortage = TryCatch(async (req, res) => {
         { new: true }
       );
     }
-  } 
+  }
   // If newShortageQuantity is provided directly, just update the shortage quantity
   else if (newShortageQuantity !== undefined && newShortageQuantity !== null) {
     if (newShortageQuantity < 0) {
@@ -1612,23 +1612,8 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
 
 
 
-   console.log("Created new shortages:", shortageUpdateResult);
-    }
-  }
 
-  res.status(200).json({
-    status: 200,
-    success: true,
-    message: "Stock updated and shortages adjusted successfully",
-    product: updatedProduct,
-    stockChange: {
-      oldStock: oldStock,
-      newStock: newStock,
-      stockDifference: stockDifference
-    },
-    shortageUpdate: shortageUpdateResult
-  });
-});
+
 
 
 
