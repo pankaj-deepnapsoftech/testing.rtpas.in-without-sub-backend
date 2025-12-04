@@ -1612,23 +1612,5 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
 
 
 
-   console.log("Created new shortages:", shortageUpdateResult);
-    }
-  }
-
-  res.status(200).json({
-    status: 200,
-    success: true,
-    message: "Stock updated and shortages adjusted successfully",
-    product: updatedProduct,
-    stockChange: {
-      oldStock: oldStock,
-      newStock: newStock,
-      stockDifference: stockDifference
-    },
-    shortageUpdate: shortageUpdateResult
-  });
-});
-
 
 
