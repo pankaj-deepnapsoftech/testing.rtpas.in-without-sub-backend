@@ -244,10 +244,6 @@ exports.bulkUploadHandler = async (req, res) => {
       }
 
       // Debug: Log HSN code for each product
-<<<<<<< HEAD
-
-=======
->>>>>>> 758eb8fd5d1626ee5d5606d5cab8e6d035ae4015
 
       // --- UPDATED CODE: product_id = last 3 chars of _id ---
       const tempId = new Product()._id.toString();
@@ -1536,7 +1532,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
       const currentShortageQuantity = shortage.shortage_quantity;
       const newShortageQuantity = Math.max(
         0,
-        currentShortageQuantity - stockDifference
+        currentShortageQuantity - (stockDifference/existingShortages.length)
       );
 
       console.log("Shortage update:", {
