@@ -1,10 +1,4 @@
 const express = require("express");
-const { isAuthenticated } = require("../middlewares/isAuthenticated");
-const { isSuper } = require("../middlewares/isSuper");
-const { upload } = require("../utils/upload");
-const { roundAllPrices } = require("../utils/roundPrices");
-const router = express.Router();
-
 const {
   create,
   update,
@@ -28,10 +22,15 @@ const {
   clearUpdatedStock,
   removeFromInventoryShortages,
   updateShortageQuantity,
-  updateIndividualShortage,
+  
   updateStockAndShortages,
   availabilQty,
 } = require("../controllers/product");
+const { isAuthenticated } = require("../middlewares/isAuthenticated");
+const { isSuper } = require("../middlewares/isSuper");
+const { upload } = require("../utils/upload");
+const { roundAllPrices } = require("../utils/roundPrices");
+const router = express.Router();
     
 // CRUD operations
 router
@@ -72,6 +71,7 @@ router.put("/update-stock-and-shortages", isAuthenticated, updateStockAndShortag
 router.put(
   "/clear-updated-price",
   isAuthenticated,
+  
   clearUpdatedPrice
 );
 router.put(
@@ -88,11 +88,6 @@ router.put(
   "/update-shortage-quantity",
   isAuthenticated,
   updateShortageQuantity
-);
-router.put(
-  "/update-individual-shortage",
-  isAuthenticated,
-  updateIndividualShortage
 );
 
 
@@ -116,6 +111,7 @@ router.post("/round-prices", isAuthenticated, isSuper, async (req, res) => {
 });
 
 // Export operations - Updated for direct products
+
 router.get("/export/excel", isAuthenticated, exportToExcel);
 router.get("/export/sample", downloadSampleTemplate);
 
