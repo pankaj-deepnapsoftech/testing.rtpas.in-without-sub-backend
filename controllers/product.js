@@ -1432,7 +1432,6 @@ exports.updateShortageQuantity = TryCatch(async (req, res) => {
 exports.updateStockAndShortages = TryCatch(async (req, res) => {
   const { productId, newStock } = req.body;
 
-  console.log("updateStockAndShortages called with:", { productId, newStock });
 
   if (!productId) {
     throw new ErrorHandler("Please provide productId", 400);
