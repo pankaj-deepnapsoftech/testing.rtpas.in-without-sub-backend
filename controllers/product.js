@@ -1355,11 +1355,11 @@ exports.updateIndividualShortage = TryCatch(async (req, res) => {
     throw new ErrorHandler("Please provide either stockToAdd or newShortageQuantity", 400);
   }
 
-  console.log("Individual shortage updated successfully:", {
-    shortageId: updatedShortage._id,
-    newShortageQuantity: updatedShortage.shortage_quantity,
-    isResolved: updatedShortage.is_resolved,
-  });
+  // console.log("Individual shortage updated successfully:", {
+  //   shortageId: updatedShortage._id,
+  //   newShortageQuantity: updatedShortage.shortage_quantity,
+  //   isResolved: updatedShortage.is_resolved,
+  // });
 
   res.status(200).json({
     status: 200,
@@ -1401,18 +1401,16 @@ exports.updateShortageQuantity = TryCatch(async (req, res) => {
   const existingShortages = await InventoryShortage.find({ item: productId });
   console.log("Existing shortages found:", existingShortages.length);
 
-  if (existingShortages.length === 0) {
-    throw new ErrorHandler("No shortages found for this product", 400);
-  }
+  
 
   // Update all shortages for this product with the new quantity
-  const updatePromises = existingShortages.map(shortage =>
+  const updatePromises = existingShortages.map(shortage =>{
     InventoryShortage.findByIdAndUpdate(
       shortage._id,
       { shortage_quantity: newShortageQuantity },
       { new: true }
     )
-  );
+  });
 
   const updatedShortages = await Promise.all(updatePromises);
 
@@ -1460,12 +1458,12 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
   const oldStock = product.current_stock;
   const stockDifference = newStock - oldStock;
 
-  console.log("Stock change details:", {
-    productName: product.name,
-    oldStock: oldStock,
-    newStock: newStock,
-    stockDifference: stockDifference
-  });
+  // console.log("Stock change details:", {
+  //   productName: product.name,
+  //   oldStock: oldStock,
+  //   newStock: newStock,
+  //   stockDifference: stockDifference
+  // });
 
   // If no change in stock, return early
   if (stockDifference === 0) {
@@ -1503,9 +1501,9 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
 
   if (existingShortages.length > 0) {
     // Update all shortages for this product
-    const updatePromises = existingShortages.map(async (shortage) => {
+    const updatePromises = existingShortages.map(async (shortage,ind) => {
       const currentShortageQuantity = shortage.shortage_quantity;
-      const newShortageQuantity = Math.max(0, currentShortageQuantity - stockDifference);
+      const newShortageQuantity = Math.max(0, currentShortageQuantity - (stockDifference/2));
 
       console.log("Shortage update:", {
         shortageId: shortage._id,
@@ -1528,6 +1526,9 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
           { new: true }
         );
       } else {
+        // if(){
+          
+        // }
         return InventoryShortage.findByIdAndUpdate(
           shortage._id,
           {
