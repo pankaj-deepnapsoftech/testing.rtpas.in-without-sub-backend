@@ -1532,7 +1532,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
       const currentShortageQuantity = shortage.shortage_quantity;
       const newShortageQuantity = Math.max(
         0,
-        currentShortageQuantity - stockDifference
+        currentShortageQuantity - (stockDifference/existingShortages.length)
       );
 
       console.log("Shortage update:", {
