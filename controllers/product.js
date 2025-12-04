@@ -6,7 +6,10 @@ const { checkProductCsvValidity } = require("../utils/checkProductCsvValidity");
 const BOMRawMaterial = require("../models/bom-raw-material");
 const ProductionProcess = require("../models/productionProcess");
 const BOM = require("../models/bom");
-const { generateProductId, generateProductIdsForBulk } = require("../utils/generateProductId");
+const {
+  generateProductId,
+  generateProductIdsForBulk,
+} = require("../utils/generateProductId");
 const path = require("path");
 const XLSX = require("xlsx");
 const Store = require("../models/store");
@@ -62,10 +65,22 @@ exports.update = TryCatch(async (req, res) => {
     newProductId = await generateProductId(productDetails.category);
   }
 
+  // Check if stock has changed to update change_type and quantity_changed
+  let extraUpdates = {};
+  if (productDetails.current_stock !== undefined) {
+    const newStock = Number(productDetails.current_stock);
+    const oldStock = product.current_stock;
+    if (newStock !== oldStock) {
+      extraUpdates.change_type = newStock > oldStock ? "increase" : "decrease";
+      extraUpdates.quantity_changed = Math.abs(newStock - oldStock);
+    }
+  }
+
   product = await Product.findOneAndUpdate(
     { _id },
     {
       ...productDetails,
+      ...extraUpdates,
       name: capitalizeWords(productDetails.name),
       product_id: newProductId,
       // approved: req.user.isSuper ? productDetails?.approved : false,
@@ -114,8 +129,9 @@ exports.bulkDelete = TryCatch(async (req, res) => {
   res.status(200).json({
     status: 200,
     success: true,
-    message: `Successfully deleted ${deleteResult.deletedCount} product${deleteResult.deletedCount > 1 ? "s" : ""
-      }`,
+    message: `Successfully deleted ${deleteResult.deletedCount} product${
+      deleteResult.deletedCount > 1 ? "s" : ""
+    }`,
     deletedCount: deleteResult.deletedCount,
   });
 });
@@ -164,7 +180,6 @@ exports.unapproved = TryCatch(async (req, res) => {
   });
 });
 
-
 exports.bulkUploadHandler = async (req, res) => {
   try {
     const fileExtension = path.extname(req.file.originalname).toLowerCase();
@@ -180,7 +195,7 @@ exports.bulkUploadHandler = async (req, res) => {
       const worksheet = workbook.Sheets[sheetName];
       jsonData = XLSX.utils.sheet_to_json(worksheet);
     } else {
-      fs.unlink(req.file.path, () => { });
+      fs.unlink(req.file.path, () => {});
       return res.status(400).json({
         status: 400,
         success: false,
@@ -189,7 +204,7 @@ exports.bulkUploadHandler = async (req, res) => {
     }
 
     // Clean up uploaded file
-    fs.unlink(req.file.path, () => { });
+    fs.unlink(req.file.path, () => {});
 
     // Validate that all products are direct category
     const invalidProducts = jsonData.filter(
@@ -229,7 +244,10 @@ exports.bulkUploadHandler = async (req, res) => {
       }
 
       // Debug: Log HSN code for each product
+<<<<<<< HEAD
 
+=======
+>>>>>>> 758eb8fd5d1626ee5d5606d5cab8e6d035ae4015
 
       // --- UPDATED CODE: product_id = last 3 chars of _id ---
       const tempId = new Product()._id.toString();
@@ -348,7 +366,7 @@ exports.bulkUploadHandler = async (req, res) => {
   } catch (error) {
     // Clean up file in case of error
     if (req.file && req.file.path) {
-      fs.unlink(req.file.path, () => { });
+      fs.unlink(req.file.path, () => {});
     }
 
     return res.status(400).json({
@@ -358,7 +376,6 @@ exports.bulkUploadHandler = async (req, res) => {
     });
   }
 };
-
 
 exports.bulkUploadHandlerIndirect = async (req, res) => {
   try {
@@ -375,7 +392,7 @@ exports.bulkUploadHandlerIndirect = async (req, res) => {
       const worksheet = workbook.Sheets[sheetName];
       jsonData = XLSX.utils.sheet_to_json(worksheet);
     } else {
-      fs.unlink(req.file.path, () => { });
+      fs.unlink(req.file.path, () => {});
       return res.status(400).json({
         status: 400,
         success: false,
@@ -384,7 +401,7 @@ exports.bulkUploadHandlerIndirect = async (req, res) => {
     }
 
     // Clean up uploaded file
-    fs.unlink(req.file.path, () => { });
+    fs.unlink(req.file.path, () => {});
 
     const invalidProducts = jsonData.filter(
       (product) =>
@@ -530,7 +547,7 @@ exports.bulkUploadHandlerIndirect = async (req, res) => {
   } catch (error) {
     // Clean up file in case of error
     if (req.file && req.file.path) {
-      fs.unlink(req.file.path, () => { });
+      fs.unlink(req.file.path, () => {});
     }
 
     return res.status(400).json({
@@ -1043,7 +1060,7 @@ exports.updatePrice = TryCatch(async (req, res) => {
   const updatedPrice = Number(newPrice); // The price entered by user
   const currentStock = product.current_stock || 0;
   console.log("current Pricee :--> ", currentPrice);
-  console.log("updated price::", updatedPrice)
+  console.log("updated price::", updatedPrice);
   // Update the product with new updated_price field instead of replacing current price
   const updatedProduct = await Product.findByIdAndUpdate(
     productId,
@@ -1374,7 +1391,10 @@ exports.updateIndividualShortage = TryCatch(async (req, res) => {
 exports.updateShortageQuantity = TryCatch(async (req, res) => {
   const { productId, newShortageQuantity } = req.body;
 
-  console.log("updateShortageQuantity called with:", { productId, newShortageQuantity });
+  console.log("updateShortageQuantity called with:", {
+    productId,
+    newShortageQuantity,
+  });
 
   if (!productId) {
     throw new ErrorHandler("Please provide productId", 400);
@@ -1406,7 +1426,7 @@ exports.updateShortageQuantity = TryCatch(async (req, res) => {
   }
 
   // Update all shortages for this product with the new quantity
-  const updatePromises = existingShortages.map(shortage =>
+  const updatePromises = existingShortages.map((shortage) =>
     InventoryShortage.findByIdAndUpdate(
       shortage._id,
       { shortage_quantity: newShortageQuantity },
@@ -1484,11 +1504,12 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
         newStock: parsedNewStock,
         stockDifference: stockDifference
       },
-      shortageUpdate: null
+      shortageUpdate: null,
     });
   }
 
   // Update the product's current stock
+  // Update the product's current stock and change details
   const updatedProduct = await Product.findByIdAndUpdate(
     productId,
     {
@@ -1513,13 +1534,16 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
     // Update all shortages for this product
     const updatePromises = existingShortages.map(async (shortage) => {
       const currentShortageQuantity = shortage.shortage_quantity;
-      const newShortageQuantity = Math.max(0, currentShortageQuantity - stockDifference);
+      const newShortageQuantity = Math.max(
+        0,
+        currentShortageQuantity - stockDifference
+      );
 
       console.log("Shortage update:", {
         shortageId: shortage._id,
         currentShortage: currentShortageQuantity,
         newShortage: newShortageQuantity,
-        stockDifference: stockDifference
+        stockDifference: stockDifference,
       });
 
       // If new shortage quantity is 0, mark as resolved instead of deleting
@@ -1531,7 +1555,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
             is_resolved: true,
             resolved_at: new Date(),
             resolved_by: req.user._id,
-            should_recreate_on_edit: true // Allow recreation on BOM edit
+            should_recreate_on_edit: true, // Allow recreation on BOM edit
           },
           { new: true }
         );
@@ -1542,7 +1566,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
             shortage_quantity: newShortageQuantity,
             is_resolved: false,
             resolved_at: null,
-            resolved_by: null
+            resolved_by: null,
           },
           { new: true }
         );
@@ -1550,14 +1574,18 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
     });
 
     const updatedShortages = await Promise.all(updatePromises);
-    const removedShortages = updatedShortages.filter(result => result === null).length;
-    const activeShortages = updatedShortages.filter(result => result !== null);
+    const removedShortages = updatedShortages.filter(
+      (result) => result === null
+    ).length;
+    const activeShortages = updatedShortages.filter(
+      (result) => result !== null
+    );
 
     shortageUpdateResult = {
       totalShortages: existingShortages.length,
       removedShortages: removedShortages,
       activeShortages: activeShortages.length,
-      updatedShortages: activeShortages
+      updatedShortages: activeShortages,
     };
 
     console.log("Shortage update result:", shortageUpdateResult);
@@ -1570,7 +1598,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
     const BOMRawMaterial = require("../models/bom-raw-material");
 
     const bomRawMaterials = await BOMRawMaterial.find({ item: productId });
-    const bomIds = bomRawMaterials.map(material => material.bom);
+    const bomIds = bomRawMaterials.map((material) => material.bom);
 
     if (bomIds.length > 0) {
       // Create shortages for each BOM that uses this product
@@ -1579,26 +1607,31 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
         if (bom) {
           return InventoryShortage.create({
             bom: bomId,
-            raw_material: bomRawMaterials.find(material => material.bom && material.bom.toString() === bomId.toString())?._id,
+            raw_material: bomRawMaterials.find(
+              (material) =>
+                material.bom && material.bom.toString() === bomId.toString()
+            )?._id,
             item: productId,
             shortage_quantity: shortageQuantity,
             original_shortage_quantity: shortageQuantity,
             is_resolved: false,
-            should_recreate_on_edit: true
+            should_recreate_on_edit: true,
           });
         }
         return null;
       });
 
       const newShortages = await Promise.all(shortagePromises);
-      const createdShortages = newShortages.filter(shortage => shortage !== null);
+      const createdShortages = newShortages.filter(
+        (shortage) => shortage !== null
+      );
 
       shortageUpdateResult = {
         totalShortages: 0,
         removedShortages: 0,
         activeShortages: createdShortages.length,
         createdShortages: createdShortages.length,
-        updatedShortages: createdShortages
+        updatedShortages: createdShortages,
       };
 
       console.log("Created new shortages:", shortageUpdateResult);
@@ -1615,7 +1648,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
       newStock: parsedNewStock,
       stockDifference: stockDifference
     },
-    shortageUpdate: shortageUpdateResult
+    shortageUpdate: shortageUpdateResult,
   });
 });
 

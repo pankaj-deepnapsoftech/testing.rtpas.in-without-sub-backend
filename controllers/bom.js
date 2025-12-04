@@ -459,7 +459,6 @@ exports.update = TryCatch(async (req, res) => {
 
     raw_materials.forEach((material) => {
       if (material._id) {
-
         // Update existing
         bulkRawMaterialOps.push({
           updateOne: {
@@ -479,15 +478,15 @@ exports.update = TryCatch(async (req, res) => {
         });
       } else {
         // Create new
-         
+
         newRawMaterials.push({
           ...material,
           bom: bom._id,
         });
       }
     });
-    
-    console.log("heyy", newRawMaterials)
+
+    console.log("heyy", newRawMaterials);
     // Execute bulk operations
     if (bulkRawMaterialOps.length > 0) {
       await BOMRawMaterial.bulkWrite(bulkRawMaterialOps);
@@ -1371,7 +1370,7 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
 
   const limit = parseInt(req.query.limit) || 100;
-
+ 
   const skip = (page - 1) * limit;
 
   const shortages = await InventoryShortage.find()
@@ -1385,7 +1384,7 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
     .populate({
       path: "bom",
 
-      select: "bom_name",
+      select: "bom_name approved", 
     })
 
     .sort({ updatedAt: -1 })
@@ -1397,6 +1396,7 @@ exports.getInventoryShortages = TryCatch(async (req, res) => {
   const formattedShortages = shortages.map((shortage) => ({
    
     bom_name: shortage.bom?.bom_name || "Unknown BOM",
+    approved: shortage.bom?.approved ,
     item_name: shortage.item?.name || "Unknown Item",
     item: shortage.item?._id || null,
     shortage_quantity: shortage.shortage_quantity,
@@ -1435,7 +1435,8 @@ exports.allRawMaterialsForInventory = TryCatch(async (req, res) => {
   const allRawMaterials = await BOMRawMaterial.find()
     .populate({
       path: "item",
-      select: "product_id name inventory_category uom category current_stock price approved item_type product_or_service store"
+      select:
+        "product_id name inventory_category uom category current_stock price approved item_type product_or_service store",
     })
     .populate({
       path: "bom",
@@ -1469,15 +1470,21 @@ exports.allRawMaterialsForInventory = TryCatch(async (req, res) => {
 
     // Check if BOM has a production_process (either populated object or ObjectId)
     let productionProcess = null;
-    
+
     if (bom.production_process) {
       // If it's already populated (object with status), use it
-      if (typeof bom.production_process === 'object' && bom.production_process !== null && bom.production_process.status) {
+      if (
+        typeof bom.production_process === "object" &&
+        bom.production_process !== null &&
+        bom.production_process.status
+      ) {
         productionProcess = bom.production_process;
       } else if (bom.production_process.toString) {
         // If it's an ObjectId, fetch it
         try {
-          productionProcess = await ProductionProcess.findById(bom.production_process);
+          productionProcess = await ProductionProcess.findById(
+            bom.production_process
+          );
         } catch (error) {
           // If fetch fails, skip this raw material
           continue;
