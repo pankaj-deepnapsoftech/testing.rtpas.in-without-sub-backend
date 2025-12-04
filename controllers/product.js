@@ -1441,7 +1441,13 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
     throw new ErrorHandler("Please provide newStock", 400);
   }
 
-  if (newStock < 0) {
+  const parsedNewStock = Number(newStock);
+
+  if (Number.isNaN(parsedNewStock)) {
+    throw new ErrorHandler("Stock must be a valid number", 400);
+  }
+
+  if (parsedNewStock < 0) {
     throw new ErrorHandler("Stock cannot be negative", 400);
   }
 
@@ -1456,13 +1462,13 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
     throw new ErrorHandler("Product doesn't exist", 400);
   }
 
-  const oldStock = product.current_stock;
-  const stockDifference = newStock - oldStock;
+  const oldStock = Number(product.current_stock || 0);
+  const stockDifference = parsedNewStock - oldStock;
 
   console.log("Stock change details:", {
     productName: product.name,
     oldStock: oldStock,
-    newStock: newStock,
+    newStock: parsedNewStock,
     stockDifference: stockDifference
   });
 
@@ -1475,7 +1481,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
       product: product,
       stockChange: {
         oldStock: oldStock,
-        newStock: newStock,
+        newStock: parsedNewStock,
         stockDifference: stockDifference
       },
       shortageUpdate: null
@@ -1486,7 +1492,10 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
   const updatedProduct = await Product.findByIdAndUpdate(
     productId,
     {
-      current_stock: newStock,
+      current_stock: parsedNewStock,
+      updated_stock: stockDifference > 0 ? stockDifference : null,
+      change_type: stockDifference > 0 ? "increase" : "decrease",
+      quantity_changed: Math.abs(stockDifference),
     },
     { new: true }
   );
@@ -1603,7 +1612,7 @@ exports.updateStockAndShortages = TryCatch(async (req, res) => {
     product: updatedProduct,
     stockChange: {
       oldStock: oldStock,
-      newStock: newStock,
+      newStock: parsedNewStock,
       stockDifference: stockDifference
     },
     shortageUpdate: shortageUpdateResult
